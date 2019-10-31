@@ -1,26 +1,60 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from "react";
+import { Route, Switch } from "react-router-dom";
+import Auth from "./components/Auth";
+import Nav from "./components/Nav";
+import Home from "./components/Home";
+import Profile from "./components/Profile";
+import Login from "./components/Login";
+import NotFoundPage from "./components/NotFoundPage";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends Component {
+  constructor(props) {
+    super(props);
+    let authObj = new Auth(this.props.history);
+    this.state = {
+      auth: authObj,
+      authLoadComplete: false
+    };
+    window.gapi.load("auth2", () => {
+      window.gapi.auth2
+        .init({
+          client_id:
+            "763740455354-9aojlgqpamco9555g36vpkl06q9ngatc.apps.googleusercontent.com"
+        })
+        .then(() => {
+          this.setState({
+            authLoadComplete: true
+          });
+        });
+    });
+  }
+  render() {
+    const { auth } = this.state;
+    if (!this.state.authLoadComplete) return "Loading...";
+    return (
+      <>
+        <Route render={props => <Nav auth={auth} {...props} />} />
+        <div className="container-fluid">
+          <Switch>
+            <Route
+              path="/"
+              exact
+              render={props => <Home auth={auth} {...props} />}
+            />
+            <Route
+              path="/profile"
+              render={props => <Profile auth={auth} {...props} />}
+            />
+            <Route
+              path="/login"
+              render={props => <Login auth={auth} {...props} />}
+            />
+            <Route component={NotFoundPage} />
+          </Switch>
+        </div>
+      </>
+    );
+  }
 }
 
 export default App;
